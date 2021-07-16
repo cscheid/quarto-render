@@ -9,10 +9,18 @@ runs:
     - name: "Download Quarto"
       shell: bash
       run: |
-        # Hardcoding versions for now to make sure new versions don't break things
-        quarto_version="0.1.367"
-        quarto_file_name="quarto-${quarto_version}-amd64.deb"
-        quarto_url="https://github.com/quarto-dev/quarto-cli/releases/download/v${quarto_version}/${quarto_file_name}"
+        # Get the latest version via the trick found here
+        # https://gist.github.com/lukechilds/a83e1d7127b78fef38c2914c4ececc3c
+
+        get_latest_release() {
+          curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
+            grep '"tag_name":' |                                            # Get tag line
+            sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+        }
+
+        quarto_version=$(get_latest_release "quarto-dev/quarto-cli")
+        quarto_file_name="quarto-$(echo ${quarto_version} | sed 's/^v//')-amd64.deb"
+        quarto_url="https://github.com/quarto-dev/quarto-cli/releases/download/${quarto_version}/${quarto_file_name}"
 
         wget -q "${quarto_url}"
 
